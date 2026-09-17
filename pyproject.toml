@@ -1,0 +1,24 @@
+[project]
+name = "agml-agent"
+version = "0.1.0"
+description = "Agentic toolkit for AgML: live external grounding (retrieve) + AgML catalog search (search_agml), exposed via MCP"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+authors = [
+    { name = "Project-AgML" },
+]
+urls = { Repository = "https://github.com/Project-AgML/agml-agent" }
+dependencies = [
+    "requests>=2.31",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "trafilatura>=1.8",
+    "ddgs>=9.0",
+    "agml>=0.8.1",
+    "mcp>=2.2.0",
+    "ollama>=0.6.2",
+]
+
+[tool.uv]
+package = false

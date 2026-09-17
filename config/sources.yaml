@@ -1,0 +1,100 @@
+# Registry of every external source retrieve.py knows about. retrieve()
+# iterates this file rather than hardcoding a source list, so adding a 9th
+# source later is: write src/sources/<name>.py, add one entry here.
+#
+# access:
+#   free_api  — real REST/HTTP API, no key required
+#   keyed_api — real REST API, requires an API key (see README "API keys")
+#   scrape    — no stable search API; fetched via site-restricted search +
+#               page-text extraction (trafilatura)
+#   gated     — not fetchable at all without a paid/institutional license
+#
+# status: active | paused | parked — only `active` sources are called by
+# retrieve(). `paused` means the fetcher is written but currently broken for
+# an external reason (see note); `parked` means there's nothing to call yet
+# (no API, no export) at all.
+#
+# verified: whether a live endpoint for this source was actually hit and
+# confirmed working while this pipeline was built (not just documented).
+
+sources:
+  - name: eppo
+    module: src.sources.eppo
+    task: [disease, pest]
+    access: keyed_api
+    verified: false   # EPPO's REST host (data.eppo.int) timed out from the
+                       # dev sandbox this was built in — endpoints are per
+                       # EPPO's own published REST docs, confirm with a real
+                       # EPPO_API_KEY on a network that isn't blocking it.
+    license: "EPPO Open Data Licence"
+    status: active
+
+  - name: ucipm_aps
+    module: src.sources.ucipm_aps
+    task: [disease, pest]
+    access: scrape
+    verified: true
+    license: "UC IPM / APSnet — public pages, no redistribution license stated; attribute source_url"
+    status: active
+
+  - name: plantwise
+    module: src.sources.plantwise
+    task: [disease, pest]
+    access: scrape
+    verified: false   # every request — even with a browser-like UA — got a
+                       # 403 from plantwiseplusknowledgebank.org (bot-protection
+                       # a plain HTTP client can't pass). Needs a headless-browser
+                       # fetch, a scraping proxy, or a direct ask to CABI/Plantwise.
+    license: "CABI Plantwise Knowledge Bank — free/open factsheets, distinct from the paywalled CABI Compendium"
+    status: paused   # fetcher code is written and untouched — just excluded
+                      # from retrieve() until the 403 is actually solved.
+
+  - name: bugwood
+    module: src.sources.bugwood
+    task: [disease, pest]
+    access: scrape
+    verified: true
+    license: "CC-BY or CC-BY-NC per item — verify per row before commercial/deployment use; see license field"
+    status: active
+
+  - name: gbif
+    module: src.sources.gbif
+    task: [species]
+    access: free_api
+    verified: true
+    license: "CC0 / CC-BY depending on record — see license field"
+    status: active
+
+  - name: usda_nalt
+    module: src.sources.usda_nalt
+    task: [species]
+    access: free_api
+    verified: false   # NAL's LOD SPARQL endpoint is standard for their
+                       # platform but wasn't reachable/parseable to confirm
+                       # from this sandbox.
+    license: "Public domain (US government)"
+    status: active
+
+  - name: usda_plants
+    module: src.sources.usda_plants
+    task: [species]
+    access: free_api
+    verified: true
+    license: "Public domain (US government)"
+    status: active
+
+  - name: usda_ams_grades
+    module: src.sources.usda_ams_grades
+    task: [quality]
+    access: scrape
+    verified: true
+    license: "Public domain (US government)"
+    status: active
+
+  - name: cabi
+    module: src.sources.cabi
+    task: [disease, pest]
+    access: gated
+    verified: false
+    license: "Subscription/institutional — CABI Compendium"
+    status: parked   # no API, no bulk export except a manual data-request form

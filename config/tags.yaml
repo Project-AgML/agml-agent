@@ -1,0 +1,76 @@
+# Canonical high-level tag vocabulary — shared across every source so an
+# agent can filter/read retrieve() results consistently regardless of which
+# source a chunk came from (e.g. "give me every symptom tag for coffee leaf
+# rust" should work whether the chunk came from EPPO or UC IPM).
+#
+# Each source module maps its own native fields/headers onto these via
+# src/common/tagging.py::normalize_tags(). Tags outside this vocabulary are
+# NOT dropped (a source may carry genuinely source-specific information) —
+# they're just sorted after the canonical ones so the canonical set is always
+# first and predictable.
+
+tags:
+  taxonomy:
+    description: >
+      Taxonomic placement — kingdom/phylum/genus/species path, or a
+      broader/narrower concept relationship.
+  synonym:
+    description: >
+      Alternate names — common-name synonyms, scientific-name synonyms,
+      SKOS altLabels.
+  host:
+    description: >
+      Host plant(s) or crop(s) associated with a pest, pathogen, or disorder.
+  symptom:
+    description: >
+      Visual or physiological symptoms used to identify a disease, pest
+      damage, or disorder.
+  life_cycle:
+    description: >
+      Life-cycle / developmental stage information for a pest or pathogen.
+  damage:
+    description: >
+      Description of the damage a pest or disease causes to a host.
+  management:
+    description: >
+      Control, treatment, or management guidance.
+  distribution:
+    description: >
+      Geographic range, and/or regulatory or quarantine status by region.
+  category:
+    description: >
+      Regulatory/quarantine categorization (e.g. EPPO A1/A2 lists) or a
+      general classification bucket that doesn't fit a more specific tag.
+  identification:
+    description: >
+      Visual identification guidance, diagnostic keys, or distinguishing
+      features not already covered by symptom/damage.
+  grade_defect:
+    description: >
+      Quality-grading defect or grade-category definitions (e.g. USDA AMS
+      grade standards).
+
+# Maps a source's raw/native field or section-header string (lowercased) to
+# one or more canonical tags above. Anything not listed here passes through
+# unchanged as a source-specific tag.
+aliases:
+  hosts: [host]
+  host_plants: [host]
+  categorization: [category, distribution]
+  quarantine_status: [category, distribution]
+  distribution: [distribution]
+  names: [synonym]
+  vernacular_names: [synonym]
+  altlabel: [synonym]
+  broader: [taxonomy]
+  narrower: [taxonomy]
+  taxonomy: [taxonomy]
+  identification: [identification]
+  life cycle: [life_cycle]
+  life_cycle: [life_cycle]
+  damage: [damage]
+  management: [management]
+  symptoms: [symptom]
+  grade: [grade_defect]
+  defects: [grade_defect]
+  grade_defect: [grade_defect]
