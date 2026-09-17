@@ -15,10 +15,10 @@ uvx --from git+https://github.com/Project-AgML/agml-agent agml-agent-mcp
 
 ### MCP clients (Claude Code, Claude Desktop, Cursor, etc.)
 
-Claude Code:
+Claude Code (`-s user` makes it available in every project, not just the current one):
 
 ```bash
-claude mcp add agml-agent -- uvx --from git+https://github.com/Project-AgML/agml-agent agml-agent-mcp
+claude mcp add agml-agent -s user -- uvx --from git+https://github.com/Project-AgML/agml-agent agml-agent-mcp
 ```
 
 Claude Desktop / any other MCP-compatible client:
