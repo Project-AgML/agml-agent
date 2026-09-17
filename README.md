@@ -11,6 +11,14 @@ Agentic toolkit for agricultural ML grounding and dataset discovery, exposed via
 uvx --from git+https://github.com/Project-AgML/agml-agent agml-agent-mcp
 ```
 
+**Before adding this to an MCP client, warm the cache once:**
+
+```bash
+uvx --from git+https://github.com/Project-AgML/agml-agent agml-agent-search "coffee rust"
+```
+
+The `agml` package pulls in a heavy dependency tree (opencv, pandas, matplotlib, scipy, etc.) with no lighter option available — first install can take several minutes. MCP clients enforce a short connection timeout (Claude Code: 30s) and will report a failed/timed-out connection on a cold cache, even though the install would succeed given more time. Running the command above once, directly in a terminal, downloads everything and prints real search results when done — a clear success signal, unlike running `agml-agent-mcp` directly (which, once started, silently waits forever for MCP protocol input that a bare terminal never sends — expected behavior for a server, but useless for confirming the pre-warm actually worked).
+
 ## Usage
 
 ### MCP clients (Claude Code, Claude Desktop, Cursor, etc.)
