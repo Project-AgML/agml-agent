@@ -88,6 +88,18 @@ Returns `{"results": [...], "total_matched": N}`. Keyword search returns trimmed
 `ml_task`: `image_classification` \| `object_detection` \| `semantic_segmentation`.
 `ag_task`: e.g. `disease_classification`, `weed_detection`, `quality_classification`.
 
+## Updating / removing
+
+`uvx --from git+...` resolves the latest commit on the default branch on every launch — each new session picks up the newest version automatically, no reinstall needed. To pin a stable version instead, append `@<tag>` to the URL, e.g. `git+https://github.com/Project-AgML/agml-agent@v0.1.0`.
+
+To remove:
+
+```bash
+claude mcp remove agml-agent
+```
+
+For other MCP clients, delete the `agml-agent` entry from the client's MCP config.
+
 ## Configuration
 
 ```bash
