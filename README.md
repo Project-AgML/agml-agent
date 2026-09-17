@@ -13,13 +13,15 @@ uvx --from git+https://github.com/Project-AgML/agml-agent agml-agent-mcp
 
 ## Usage
 
-### Claude Code
+### MCP clients (Claude Code, Claude Desktop, Cursor, etc.)
+
+Claude Code:
 
 ```bash
 claude mcp add agml-agent -- uvx --from git+https://github.com/Project-AgML/agml-agent agml-agent-mcp
 ```
 
-### Claude Desktop / other MCP clients
+Claude Desktop / any other MCP-compatible client:
 
 ```json
 {
@@ -33,6 +35,8 @@ claude mcp add agml-agent -- uvx --from git+https://github.com/Project-AgML/agml
 ```
 
 ### Ollama
+
+Ollama has no MCP client support, so `agml-agent-chat` runs as a standalone bridge process instead of a client config: it connects to your Ollama server, translates the MCP tool schemas into Ollama's tool-calling format, and forwards tool calls back through MCP.
 
 ```bash
 uvx --from git+https://github.com/Project-AgML/agml-agent agml-agent-chat --host http://localhost:11434
