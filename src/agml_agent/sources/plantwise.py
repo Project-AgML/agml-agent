@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from datetime import date
 
-from src.common.schema import RetrievedChunk
-from src.common.scrape import excerpt_around_match, search_and_extract
-from src.common.tagging import normalize_tags
-from src.sources.base import ClassQuery
+from agml_agent.common.schema import RetrievedChunk
+from agml_agent.common.scrape import excerpt_around_match, search_and_extract
+from agml_agent.common.tagging import normalize_tags
+from agml_agent.sources.base import ClassQuery
 
 SITES = ["plantwiseplusknowledgebank.org"]
 LICENSE = "CABI Plantwise Knowledge Bank — free/open factsheet"

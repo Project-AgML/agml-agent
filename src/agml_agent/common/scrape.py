@@ -13,7 +13,7 @@ import requests
 import trafilatura
 from ddgs import DDGS
 
-from src.common.http import HEADERS, TIMEOUT
+from agml_agent.common.http import HEADERS, TIMEOUT
 
 log = logging.getLogger(__name__)
 

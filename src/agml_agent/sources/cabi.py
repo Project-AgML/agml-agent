@@ -7,8 +7,8 @@ to do it directly) fails loudly instead of silently returning nothing.
 
 from __future__ import annotations
 
-from src.sources.base import ClassQuery
-from src.common.schema import RetrievedChunk
+from agml_agent.sources.base import ClassQuery
+from agml_agent.common.schema import RetrievedChunk
 
 
 def fetch(query: ClassQuery) -> list[RetrievedChunk]:

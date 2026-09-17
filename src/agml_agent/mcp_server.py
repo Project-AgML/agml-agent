@@ -3,10 +3,13 @@ The MCP server — wraps retrieve() and search_agml() as two distinct tools,
 reachable identically from any MCP-compatible agent (Claude Code, Claude
 Desktop, Cursor, a custom agent loop), not just this project's own scripts.
 
-Run directly:
-    uv run mcp_server.py
+Run directly (from a source checkout):
+    uv run python -m agml_agent.mcp_server
 
-Point an MCP client at it by running this file as the client's configured
+Or, once installed (pip/uvx):
+    agml-agent-mcp
+
+Point an MCP client at it by running this as the client's configured
 command — see README "MCP server" for a Claude Desktop config example.
 """
 
@@ -14,8 +17,8 @@ from __future__ import annotations
 
 from mcp.server.mcpserver import MCPServer  # mcp>=2.0 — FastMCP was renamed to MCPServer
 
-from retrieve import retrieve as _retrieve
-from search_agml import search_agml as _search_agml
+from agml_agent.retrieve import retrieve as _retrieve
+from agml_agent.search_agml import search_agml as _search_agml
 
 mcp = MCPServer("agml-agent")
 
@@ -93,5 +96,9 @@ def search_agml(
     )
 
 
-if __name__ == "__main__":
+def main() -> None:
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

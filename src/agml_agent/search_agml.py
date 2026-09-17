@@ -5,21 +5,22 @@ catalog, or an exact-name lookup — bundling metadata and benchmark data into
 one result per dataset, the same way gbif.py bundles taxonomy + images into
 one call instead of splitting them into separate tools.
 
-    from search_agml import search_agml
+    from agml_agent.search_agml import search_agml
     search_agml("citrus disease classification")
     search_agml(exact_name="my_eval_set")   # explicit opt-in to a held-out set
 
 No embeddings — keyword/word-boundary relevance matching against each
 dataset's name/classes/crop_types/tasks, same gate pattern already used in
-src/sources/usda_plants.py and src/sources/gbif.py. See the design doc for
-why: the catalog's long tail (iNatAg splits) is never browsed raw, and the
-genuinely diverse core+curated catalog is small enough for this to work
-without a precomputed embedding index.
+agml_agent/sources/usda_plants.py and agml_agent/sources/gbif.py. See the
+design doc for why: the catalog's long tail (iNatAg splits) is never
+browsed raw, and the genuinely diverse core+curated catalog is small enough
+for this to work without a precomputed embedding index.
 
-CLI, for manually testing:
-    python search_agml.py "citrus disease classification"
-    python search_agml.py "coffee" --ml-task image_classification
-    python search_agml.py --exact-name bean_disease_uganda
+CLI, for manually testing (from a source checkout:
+`uv run python -m agml_agent.search_agml ...`; installed: `agml-agent-search ...`):
+    agml-agent-search "citrus disease classification"
+    agml-agent-search "coffee" --ml-task image_classification
+    agml-agent-search --exact-name bean_disease_uganda
 """
 
 from __future__ import annotations
@@ -29,7 +30,7 @@ import json
 import logging
 import re
 
-from src.agml_catalog import get_benchmarks, merged_catalog
+from agml_agent.agml_catalog import get_benchmarks, merged_catalog
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
@@ -124,7 +125,7 @@ def search_agml(
     return {"results": results, "total_matched": len(candidates)}
 
 
-def main(args: argparse.Namespace) -> None:
+def _run(args: argparse.Namespace) -> None:
     result = search_agml(
         query=args.query or "",
         exact_name=args.exact_name,
@@ -160,10 +161,10 @@ def main(args: argparse.Namespace) -> None:
         print("\n" + json.dumps(result, indent=2, default=str))
 
 
-if __name__ == "__main__":
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Search AgML's dataset catalog (package + live website data merged), or look up one dataset by exact name.",
-        epilog='Example: search_agml.py "citrus disease" --ml-task image_classification',
+        epilog='Example: agml-agent-search "citrus disease" --ml-task image_classification',
     )
     parser.add_argument("query", nargs="?", default=None, help="keyword(s) to match against dataset name/classes/crop/task")
     parser.add_argument("--exact-name", default=None, help="look up one dataset by its exact name (bypasses query matching) — the eval-set opt-in path")
@@ -171,4 +172,8 @@ if __name__ == "__main__":
     parser.add_argument("--ag-task", default=None, help='e.g. disease_classification, weed_detection, quality_classification')
     parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
     parser.add_argument("--json", action="store_true")
-    main(parser.parse_args())
+    _run(parser.parse_args())
+
+
+if __name__ == "__main__":
+    main()

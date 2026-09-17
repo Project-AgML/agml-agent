@@ -19,7 +19,7 @@ from functools import lru_cache
 
 import agml
 
-from src.common.http import get
+from agml_agent.common.http import get
 
 log = logging.getLogger(__name__)
 

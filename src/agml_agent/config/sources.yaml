@@ -1,6 +1,6 @@
 # Registry of every external source retrieve.py knows about. retrieve()
 # iterates this file rather than hardcoding a source list, so adding a 9th
-# source later is: write src/sources/<name>.py, add one entry here.
+# source later is: write agml_agent/sources/<name>.py, add one entry here.
 #
 # access:
 #   free_api  — real REST/HTTP API, no key required
@@ -19,7 +19,7 @@
 
 sources:
   - name: eppo
-    module: src.sources.eppo
+    module: agml_agent.sources.eppo
     task: [disease, pest]
     access: keyed_api
     verified: false   # EPPO's REST host (data.eppo.int) timed out from the
@@ -30,7 +30,7 @@ sources:
     status: active
 
   - name: ucipm_aps
-    module: src.sources.ucipm_aps
+    module: agml_agent.sources.ucipm_aps
     task: [disease, pest]
     access: scrape
     verified: true
@@ -38,7 +38,7 @@ sources:
     status: active
 
   - name: plantwise
-    module: src.sources.plantwise
+    module: agml_agent.sources.plantwise
     task: [disease, pest]
     access: scrape
     verified: false   # every request — even with a browser-like UA — got a
@@ -50,7 +50,7 @@ sources:
                       # from retrieve() until the 403 is actually solved.
 
   - name: bugwood
-    module: src.sources.bugwood
+    module: agml_agent.sources.bugwood
     task: [disease, pest]
     access: scrape
     verified: true
@@ -58,7 +58,7 @@ sources:
     status: active
 
   - name: gbif
-    module: src.sources.gbif
+    module: agml_agent.sources.gbif
     task: [species]
     access: free_api
     verified: true
@@ -66,7 +66,7 @@ sources:
     status: active
 
   - name: usda_nalt
-    module: src.sources.usda_nalt
+    module: agml_agent.sources.usda_nalt
     task: [species]
     access: free_api
     verified: false   # NAL's LOD SPARQL endpoint is standard for their
@@ -76,7 +76,7 @@ sources:
     status: active
 
   - name: usda_plants
-    module: src.sources.usda_plants
+    module: agml_agent.sources.usda_plants
     task: [species]
     access: free_api
     verified: true
@@ -84,7 +84,7 @@ sources:
     status: active
 
   - name: usda_ams_grades
-    module: src.sources.usda_ams_grades
+    module: agml_agent.sources.usda_ams_grades
     task: [quality]
     access: scrape
     verified: true
@@ -92,7 +92,7 @@ sources:
     status: active
 
   - name: cabi
-    module: src.sources.cabi
+    module: agml_agent.sources.cabi
     task: [disease, pest]
     access: gated
     verified: false

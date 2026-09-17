@@ -10,16 +10,17 @@ after the canonical ones.
 from __future__ import annotations
 
 from functools import lru_cache
-from pathlib import Path
+from importlib.resources import files
 
 import yaml
-
-_TAGS_YAML = Path(__file__).resolve().parents[2] / "config" / "tags.yaml"
 
 
 @lru_cache(maxsize=1)
 def _load_vocab() -> tuple[list[str], dict[str, list[str]]]:
-    cfg = yaml.safe_load(_TAGS_YAML.read_text(encoding="utf-8"))
+    # importlib.resources, not a filesystem-relative path — see
+    # agml_agent/retrieve.py::_load_sources for why.
+    text = files("agml_agent").joinpath("config", "tags.yaml").read_text(encoding="utf-8")
+    cfg = yaml.safe_load(text)
     canonical = list(cfg["tags"].keys())
     aliases = {k.lower(): v for k, v in (cfg.get("aliases") or {}).items()}
     return canonical, aliases

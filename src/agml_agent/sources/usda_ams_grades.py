@@ -11,11 +11,11 @@ from __future__ import annotations
 import re
 from datetime import date
 
-from src.common.http import get
-from src.common.schema import RetrievedChunk
-from src.common.scrape import excerpt_around_match, fetch_and_extract, find_match
-from src.common.tagging import normalize_tags
-from src.sources.base import ClassQuery
+from agml_agent.common.http import get
+from agml_agent.common.schema import RetrievedChunk
+from agml_agent.common.scrape import excerpt_around_match, fetch_and_extract, find_match
+from agml_agent.common.tagging import normalize_tags
+from agml_agent.sources.base import ClassQuery
 
 INDEX_URL = "https://www.ams.usda.gov/grades-standards"
 LICENSE = "Public domain (US government)"

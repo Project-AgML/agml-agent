@@ -15,9 +15,9 @@ Point at a remote Ollama server (e.g. a VM with more VRAM/compute) with
 --host or the OLLAMA_HOST env var; pick any locally-pulled model, or let
 this list what's available and choose interactively.
 
-    uv run chat.py                                    # local ollama, pick model interactively
-    uv run chat.py --host http://192.168.1.50:11434    # remote VM
-    uv run chat.py --model qwen2.5:7b                  # skip the picker
+    uv run python -m agml_agent.chat                          # local ollama, pick model interactively
+    agml-agent-chat --host http://192.168.1.50:11434           # remote VM (once installed)
+    agml-agent-chat --model qwen2.5:7b                         # skip the picker
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ SYSTEM_PROMPT = (
     "giving up after one attempt."
 )
 
-MCP_SERVER_COMMAND = StdioServerParameters(command="uv", args=["run", "mcp_server.py"])
+MCP_SERVER_COMMAND = StdioServerParameters(command=sys.executable, args=["-m", "agml_agent.mcp_server"])
 
 
 def _mcp_tool_to_ollama(tool) -> dict:
@@ -156,8 +156,12 @@ async def run(args: argparse.Namespace) -> None:
                 await run_turn(ollama_client, mcp_session, tools, model, messages)
 
 
-if __name__ == "__main__":
+def main() -> None:
     parser = argparse.ArgumentParser(description="Interactive terminal chat with MCP-mediated access to agml-agent's tools.")
     parser.add_argument("--host", default=None, help="Ollama server URL, e.g. http://192.168.1.50:11434 — also reads OLLAMA_HOST env var if unset")
     parser.add_argument("--model", default=None, help="model name to use, e.g. qwen2.5:7b — omit to pick interactively from what's available")
     asyncio.run(run(parser.parse_args()))
+
+
+if __name__ == "__main__":
+    main()

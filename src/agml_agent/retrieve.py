@@ -1,31 +1,32 @@
 """
-agml.retrieve() — live, demand-driven grounding lookup.
+retrieve() — live, demand-driven external grounding lookup.
 
-    from retrieve import retrieve
+    from agml_agent.retrieve import retrieve
     result = retrieve("Coffee leaf rust", crop="coffee", scientific_name="Hemileia vastatrix")
 
+External sources only — for AgML's own dataset catalog, see the separate
+search_agml() tool (agml_agent/search_agml.py), a deliberately different
+tool for a deliberately different task (see README "Why two tools, not
+one, not three").
+
 No corpus is built or stored anywhere. Every call hits each active source's
-fetcher module (src/sources/<name>.py) live, over the network, right now.
-Results are kept in a per-process in-memory cache only — nothing is written
-to disk, nothing is published anywhere — so repeated lookups for the same
-class within one run/process don't re-hit the network, but nothing persists
-across runs.
+fetcher module (agml_agent/sources/<name>.py) live, over the network, right
+now. Results are kept in a per-process in-memory cache only — nothing is
+written to disk, nothing is published anywhere — so repeated lookups for the
+same class within one run/process don't re-hit the network, but nothing
+persists across runs.
 
 `sources`:
-  - unset (None)        -> every active external source in config/sources.yaml
-                            (i.e. everything except paused/parked ones).
-                            AgML's own image datasets are a SEPARATE lane —
-                            see the "agml:" prefix note below — not yet wired in.
-  - a list of source names -> only those (must be `status: active`)
-  - an "agml:..." prefixed name -> NOT YET IMPLEMENTED (raises NotImplementedError).
-    This is deliberately a distinct namespace from external source names so the
-    interface shape already matches where AgML image-dataset linking will slot
-    in later, without changing this function's signature.
+  - unset (None)            -> every active source in config/sources.yaml
+                                (i.e. everything except paused/parked ones).
+  - a list of source names  -> only those (must be `status: active`)
 
-CLI, for manually testing one class against every active source:
-    python retrieve.py "Coffee leaf rust" --crop coffee --sci "Hemileia vastatrix" --aliases roya
-    python retrieve.py "Coffea arabica" --crop coffee --task species
-    python retrieve.py "Coffee leaf rust" --sources gbif eppo
+CLI, for manually testing one class against every active source (from a
+source checkout: `uv run python -m agml_agent.retrieve ...`; installed:
+`agml-agent-retrieve ...`):
+    agml-agent-retrieve "Coffee leaf rust" --crop coffee --sci "Hemileia vastatrix" --aliases roya
+    agml-agent-retrieve "Coffea arabica" --crop coffee --task species
+    agml-agent-retrieve "Coffee leaf rust" --sources gbif eppo
 """
 
 from __future__ import annotations
@@ -34,12 +35,12 @@ import argparse
 import importlib
 import json
 import logging
-from pathlib import Path
+from importlib.resources import files
 
 import yaml
 from dotenv import load_dotenv
 
-from src.sources.base import ClassQuery
+from agml_agent.sources.base import ClassQuery
 
 load_dotenv()
 
@@ -55,15 +56,18 @@ log = logging.getLogger(__name__)
 for _noisy in ("primp", "httpx", "httpcore", "urllib3", "h2"):
     logging.getLogger(_noisy).setLevel(logging.WARNING)
 
-ROOT = Path(__file__).parent
-
 # process-lifetime cache: {(source_name, class_name_lower): [chunk_dict, ...]}
 # Never persisted, never shared across processes — see module docstring.
 _CACHE: dict[tuple[str, str], list[dict]] = {}
 
 
 def _load_sources() -> dict[str, dict]:
-    cfg = yaml.safe_load((ROOT / "config" / "sources.yaml").read_text())
+    # importlib.resources, not a filesystem-relative path — config/ ships
+    # inside the installed package, and this works whether running from a
+    # source checkout or a pip/uvx install, unlike a Path(__file__)-relative
+    # read (which only reliably works when there's a real repo checkout).
+    text = files("agml_agent").joinpath("config", "sources.yaml").read_text()
+    cfg = yaml.safe_load(text)
     return {s["name"]: s for s in cfg["sources"]}
 
 
@@ -85,16 +89,7 @@ def retrieve(
     one broken source never breaks the whole call."""
     registry = _load_sources()
 
-    if sources is None:
-        requested = _active_source_names()
-    else:
-        agml_sources = [s for s in sources if s.startswith("agml:")]
-        if agml_sources:
-            raise NotImplementedError(
-                f"AgML image-dataset sources ({agml_sources}) aren't wired into retrieve() "
-                "yet — external sources only for now. See README 'How this will link to AgML'."
-            )
-        requested = sources
+    requested = _active_source_names() if sources is None else sources
 
     query = ClassQuery(
         class_name=class_name, crop=crop, task=task,
@@ -134,7 +129,7 @@ def retrieve(
     return results
 
 
-def main(args: argparse.Namespace) -> None:
+def _run(args: argparse.Namespace) -> None:
     result = retrieve(
         class_name=args.class_name,
         crop=args.crop or "",
@@ -159,11 +154,11 @@ def main(args: argparse.Namespace) -> None:
         print("\n" + json.dumps(result, indent=2))
 
 
-if __name__ == "__main__":
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Test agml.retrieve() against one class, live, over every active source "
                      "(see config/sources.yaml) — or a subset via --sources.",
-        epilog='Example: retrieve.py "Coffee leaf rust" --crop coffee --sci "Hemileia vastatrix" '
+        epilog='Example: agml-agent-retrieve "Coffee leaf rust" --crop coffee --sci "Hemileia vastatrix" '
                '--aliases roya --task disease',
     )
     parser.add_argument(
@@ -206,4 +201,8 @@ if __name__ == "__main__":
         help="also print the full result as indented JSON after the human-readable summary "
              "(every field per chunk — tags, raw_response, license, etc., not just the excerpt).",
     )
-    main(parser.parse_args())
+    _run(parser.parse_args())
+
+
+if __name__ == "__main__":
+    main()
