@@ -9,12 +9,17 @@ one call instead of splitting them into separate tools.
     search_agml("citrus disease classification")
     search_agml(exact_name="my_eval_set")   # explicit opt-in to a held-out set
 
-No embeddings — keyword/word-boundary relevance matching against each
-dataset's name/classes/crop_types/tasks, same gate pattern already used in
-agml_agent/sources/usda_plants.py and agml_agent/sources/gbif.py. See the
-design doc for why: the catalog's long tail (iNatAg splits) is never
-browsed raw, and the genuinely diverse core+curated catalog is small enough
-for this to work without a precomputed embedding index.
+No embeddings — keyword/whole-token relevance matching against every
+metadata field a dataset has (name, classes, crop_types, tasks, location,
+sensor_modality, citation/bibtex keywords, everything), not a hand-picked
+subset. A hand-picked field list has already needed extending twice (a
+point-cloud dataset only matched because "point_cloud" happened to be in
+its *name*, not its sensor_modality field — searching every field removes
+that whack-a-mole problem instead of adding one more field at a time). See
+the design doc for why this doesn't need a precomputed embedding index: the
+catalog's long tail (iNatAg splits) is never browsed raw, and the genuinely
+diverse core+curated catalog is small enough for token matching across all
+fields to work without one.
 
 CLI, for manually testing (from a source checkout:
 `uv run python -m agml_agent.search_agml ...`; installed: `agml-agent-search ...`):
@@ -29,6 +34,7 @@ import argparse
 import json
 import logging
 import re
+from functools import lru_cache
 
 from agml_agent.agml_catalog import get_benchmarks, merged_catalog
 
@@ -51,22 +57,40 @@ def _tokenize(text: str) -> set[str]:
     return set(_TOKEN_RE.findall(text.lower()))
 
 
+def _flatten_to_text(value) -> str:
+    """Recursively stringifies any JSON-like value into one text blob —
+    covers every metadata field a dataset has (name, classes, crop_types,
+    tasks, location, sensor_modality, citation/bibtex, everything), not a
+    hand-picked subset that has to be extended every time a new kind of
+    query reveals a field we forgot to include."""
+    if value is None:
+        return ""
+    if isinstance(value, dict):
+        return " ".join(_flatten_to_text(v) for v in value.values())
+    if isinstance(value, list):
+        return " ".join(_flatten_to_text(v) for v in value)
+    return str(value)
+
+
+@lru_cache(maxsize=1)
+def _catalog_tokens() -> dict[str, frozenset[str]]:
+    """Token set per dataset, computed once per process and cached — search
+    calls just look these up instead of re-flattening/re-tokenizing every
+    entry's full record (bibtex, citation, etc.) on every single query."""
+    return {
+        name: frozenset(_tokenize(_flatten_to_text(entry)))
+        for name, entry in merged_catalog().items()
+    }
+
+
 def _matches(query: str, entry: dict) -> bool:
     """Every word in the query must exactly match a token somewhere in the
-    entry's name/classes/crop_types/tasks — a multi-word query like "citrus
-    disease" is an AND over {"citrus", "disease"}, not one literal phrase."""
+    entry's full record — a multi-word query like "citrus disease" is an
+    AND over {"citrus", "disease"}, not one literal phrase."""
     query_tokens = _tokenize(query)
     if not query_tokens:
         return True
-    crop_types = entry.get("crop_types")
-    haystacks = [
-        str(entry.get("name") or ""),
-        " ".join(str(c) for c in (entry.get("classes") or []) if c is not None),
-        " ".join(str(c) for c in crop_types if c is not None) if isinstance(crop_types, list) else str(crop_types or ""),
-        str(entry.get("ag_task") or ""),
-        str(entry.get("ml_task") or ""),
-    ]
-    entry_tokens = _tokenize(" ".join(haystacks))
+    entry_tokens = _catalog_tokens().get(entry.get("name"), frozenset())
     return query_tokens.issubset(entry_tokens)
 
 
@@ -84,6 +108,8 @@ def _summarize(entry: dict, include_benchmarks: bool = False) -> dict:
         "classes_preview": (entry.get("classes") or [])[:8],
         "license": entry.get("license"),
         "hf_link": entry.get("hf_link"),
+        "examples_image_url": entry.get("examples_image_url"),
+        "point_cloud_sample_url": entry.get("point_cloud_sample_url"),
         "source": entry.get("source"),
     }
     if include_benchmarks:

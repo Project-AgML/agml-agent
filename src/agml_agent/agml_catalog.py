@@ -23,8 +23,9 @@ from agml_agent.common.http import get
 
 log = logging.getLogger(__name__)
 
-WEBSITE_CATALOG_URL = "https://project-agml.github.io/data/hf_datasets.json"
-WEBSITE_PERFORMANCE_URL = "https://project-agml.github.io/data/performance/{name}.json"
+WEBSITE_BASE_URL = "https://project-agml.github.io"
+WEBSITE_CATALOG_URL = f"{WEBSITE_BASE_URL}/data/hf_datasets.json"
+WEBSITE_PERFORMANCE_URL = f"{WEBSITE_BASE_URL}/data/performance/{{name}}.json"
 
 
 def _metadata_to_dict(meta) -> dict:
@@ -92,6 +93,13 @@ def _website_catalog() -> dict[str, dict]:
         d["ml_task"] = entry.get("machine_learning_task")
         d["ag_task"] = entry.get("agricultural_task")
         d["classes"] = _normalize_classes(entry.get("classes"))
+        # the website's own JSON stores these as site-relative paths (e.g.
+        # "/img/agml/sample_images/<name>_sample.webp") — not usable URLs on
+        # their own outside the website's own pages.
+        for url_field in ("examples_image_url", "point_cloud_sample_url"):
+            url = entry.get(url_field)
+            if url and url.startswith("/"):
+                d[url_field] = WEBSITE_BASE_URL + url
         d["source"] = "agml_website"
         catalog[name] = d
     return catalog
